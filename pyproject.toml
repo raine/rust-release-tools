@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rust-release-tools"
+version = "0.1.0"
+description = "Release automation tools for Rust/Cargo projects"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+
+[project.scripts]
+cargo-release = "release_tools.release:main"
+update-changelog = "release_tools.changelog:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
