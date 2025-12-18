@@ -32,6 +32,7 @@ Release a new version of a Cargo crate.
 cargo-release patch          # Bump patch version (0.1.0 -> 0.1.1)
 cargo-release minor          # Bump minor version (0.1.0 -> 0.2.0)
 cargo-release major          # Bump major version (0.1.0 -> 1.0.0)
+cargo-release current        # Release existing version (for first release)
 cargo-release --dry-run patch  # Preview without committing
 cargo-release --continue     # Resume failed release
 ```

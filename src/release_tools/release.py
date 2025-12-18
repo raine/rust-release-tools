@@ -92,6 +92,9 @@ def bump_version(current: str, bump: str) -> str:
         sys.stderr.write(f"error: unsupported version format '{current}'\n")
         sys.exit(1)
 
+    if bump == "current":
+        return current
+
     major, minor, patch = map(int, parts)
 
     if bump == "patch":
@@ -121,10 +124,12 @@ def update_cargo_files(cargo_toml: pathlib.Path, new_version: str, root: pathlib
     if replaced != 1:
         sys.stderr.write("error: failed to update Cargo.toml\n")
         sys.exit(1)
-    cargo_toml.write_text(new_toml_text)
 
-    # Let cargo update Cargo.lock automatically
-    run(["cargo", "check", "--quiet"], root)
+    # Only write if actual changes occurred (e.g., bump='current' won't change anything)
+    if new_toml_text != toml_text:
+        cargo_toml.write_text(new_toml_text)
+        # Let cargo update Cargo.lock automatically
+        run(["cargo", "check", "--quiet"], root)
 
 
 def commit_release(new_version: str, root: pathlib.Path) -> None:
@@ -196,8 +201,8 @@ def main() -> None:
     parser.add_argument(
         "bump",
         nargs="?",
-        choices=("patch", "minor", "major"),
-        help="Semver component to bump",
+        choices=("patch", "minor", "major", "current"),
+        help="Semver component to bump, or 'current' to release existing version",
     )
     parser.add_argument(
         "--dry-run",
@@ -234,6 +239,17 @@ def main() -> None:
 
     crate_name, current_version = read_package_info(cargo_toml)
     new_version = bump_version(current_version, args.bump)
+
+    # Check for existing tag before doing work
+    tag_name = f"v{new_version}"
+    if subprocess.run(
+        ["git", "rev-parse", tag_name],
+        cwd=root,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    ).returncode == 0:
+        sys.stderr.write(f"error: tag {tag_name} already exists\n")
+        sys.exit(1)
 
     update_cargo_files(cargo_toml, new_version, root)
 
