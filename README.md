@@ -10,14 +10,6 @@ pipx install git+https://github.com/raine/rust-release-tools.git
 
 ## Updating
 
-After pushing changes to this repo, upgrade in your environment:
-
-```bash
-pipx upgrade rust-release-tools
-```
-
-Or reinstall to force update:
-
 ```bash
 pipx install --force git+https://github.com/raine/rust-release-tools.git
 ```
