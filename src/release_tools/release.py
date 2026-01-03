@@ -86,6 +86,31 @@ def read_package_info(cargo_toml: pathlib.Path) -> Tuple[str, str]:
     return name_match.group(1), version_match.group(1)
 
 
+def extract_changelog_entry(changelog_path: pathlib.Path, version: str) -> str | None:
+    """Extract a specific version's changelog entry from CHANGELOG.md."""
+    if not changelog_path.exists():
+        return None
+
+    content = changelog_path.read_text()
+
+    # Find the heading for this version (e.g., "## v0.1.66 (2026-01-03)")
+    pattern = rf"^(## {re.escape(version)} \([^)]+\).*)$"
+    match = re.search(pattern, content, re.MULTILINE)
+    if not match:
+        return None
+
+    start = match.start()
+
+    # Find the next ## heading or end of file
+    next_heading = re.search(r"^## ", content[match.end():], re.MULTILINE)
+    if next_heading:
+        end = match.end() + next_heading.start()
+    else:
+        end = len(content)
+
+    return content[start:end].rstrip()
+
+
 def bump_version(current: str, bump: str) -> str:
     parts = current.split(".")
     if len(parts) != 3 or any(not p.isdigit() for p in parts):
@@ -271,6 +296,13 @@ def main() -> None:
     # Let user review/edit changelog before proceeding
     editor_cmd = shlex.split(os.environ.get("EDITOR", "vim"))
     subprocess.run(editor_cmd + ["CHANGELOG.md"], check=True)
+
+    # Display the changelog entry as edited
+    changelog_entry = extract_changelog_entry(root / "CHANGELOG.md", f"v{new_version}")
+    if changelog_entry:
+        print(f"\nChangelog entry for v{new_version}:\n")
+        print(changelog_entry)
+        print()
 
     response = input("Proceed with release? [y/N] ").strip().lower()
     if response != "y":
