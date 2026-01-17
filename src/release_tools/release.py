@@ -6,6 +6,7 @@ Usage:
     cargo-release patch|minor|major   # Normal release
     cargo-release --dry-run patch     # Preview changes without committing
     cargo-release --continue          # Resume a failed release
+    cargo-release --skip-changelog patch  # Skip AI changelog, write manually
 
 The --continue flag is useful when cargo publish fails (e.g., network issues)
 after the release commit has been created. It will:
@@ -240,6 +241,11 @@ def main() -> None:
         action="store_true",
         help="Continue a failed release (publish, tag, and push)",
     )
+    parser.add_argument(
+        "--skip-changelog",
+        action="store_true",
+        help="Skip AI changelog generation, open editor to write manually",
+    )
     args = parser.parse_args()
 
     # Find project root after parsing args (so --help works anywhere)
@@ -278,8 +284,9 @@ def main() -> None:
 
     update_cargo_files(cargo_toml, new_version, root)
 
-    # Generate changelog entry for the new version
-    changelog.generate_for_pending(f"v{new_version}")
+    if not args.skip_changelog:
+        # Generate changelog entry for the new version
+        changelog.generate_for_pending(f"v{new_version}")
 
     status_after_update = run_capture(
         ["git", "status", "--porcelain", "--ignore-submodules"], root
@@ -304,10 +311,14 @@ def main() -> None:
         print(changelog_entry)
         print()
 
-    response = input("Proceed with release? [y/N] ").strip().lower()
-    if response != "y":
-        print("Aborting release.")
-        sys.exit(1)
+    while True:
+        response = input("Proceed with release? [y/n] ").strip().lower()
+        if response in ("y", "yes"):
+            break
+        if response in ("n", "no"):
+            print("Aborting release.")
+            sys.exit(1)
+        print(f"Invalid response: '{response}'. Please enter 'y' or 'n'.")
 
     commit_release(new_version, root)
 

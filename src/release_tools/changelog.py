@@ -92,10 +92,24 @@ Generate a user-focused changelog entry for a git tag and insert it into CHANGEL
 
 ```markdown
 ## {input} (YYYY-MM-DD)
+<!-- summary: Brief summary here -->
 
 - Change description
 - Another change description
 ```
+
+## Summary Comment Guidelines
+
+The `<!-- summary: ... -->` comment is required. Guidelines:
+
+- Keep it to 5-10 words max
+- Focus on the 1-2 most important user-facing changes
+- Use comma to separate multiple items if needed
+- No periods, no markdown formatting
+- Examples:
+  - `<!-- summary: Dashboard patch mode, diff view -->`
+  - `<!-- summary: OpenCode support -->`
+  - `<!-- summary: Git status column in dashboard -->`
 """
 
 PENDING_PROMPT = """\
@@ -149,10 +163,24 @@ Generate a user-focused changelog entry for the upcoming release `{input}` and i
 
 ```markdown
 ## {input} (YYYY-MM-DD)
+<!-- summary: Brief summary here -->
 
 - Change description
 - Another change description
 ```
+
+## Summary Comment Guidelines
+
+The `<!-- summary: ... -->` comment is required. Guidelines:
+
+- Keep it to 5-10 words max
+- Focus on the 1-2 most important user-facing changes
+- Use comma to separate multiple items if needed
+- No periods, no markdown formatting
+- Examples:
+  - `<!-- summary: Dashboard patch mode, diff view -->`
+  - `<!-- summary: OpenCode support -->`
+  - `<!-- summary: Git status column in dashboard -->`
 """
 
 
