@@ -178,7 +178,7 @@ def publish_crate(root: pathlib.Path) -> None:
     run(["cargo", "publish"], root)
 
 
-def continue_release(root: pathlib.Path, cargo_toml: pathlib.Path) -> None:
+def continue_release(root: pathlib.Path, cargo_toml: pathlib.Path, *, skip_publish: bool = False) -> None:
     """Continue a release that failed after commit but before completion."""
     # Get the last commit message to extract version
     last_commit = run_capture(["git", "log", "-1", "--format=%s"], root).strip()
@@ -212,7 +212,8 @@ def continue_release(root: pathlib.Path, cargo_toml: pathlib.Path) -> None:
 
     print(f"Continuing release of {crate_name} v{version}")
 
-    publish_crate(root)
+    if not skip_publish:
+        publish_crate(root)
 
     if not tag_exists:
         tag_release(version, root)
@@ -246,6 +247,11 @@ def main() -> None:
         action="store_true",
         help="Skip AI changelog generation, open editor to write manually",
     )
+    parser.add_argument(
+        "--skip-publish",
+        action="store_true",
+        help="Skip publishing to crates.io",
+    )
     args = parser.parse_args()
 
     # Find project root after parsing args (so --help works anywhere)
@@ -260,7 +266,7 @@ def main() -> None:
     if args.continue_release:
         if args.bump:
             parser.error("--continue does not take a bump argument")
-        continue_release(root, cargo_toml)
+        continue_release(root, cargo_toml, skip_publish=args.skip_publish)
         return
 
     if not args.bump:
@@ -291,7 +297,9 @@ def main() -> None:
     status_after_update = run_capture(
         ["git", "status", "--porcelain", "--ignore-submodules"], root
     )
-    if not status_after_update.strip():
+    has_changes = bool(status_after_update.strip())
+
+    if not has_changes and args.bump != "current":
         sys.stderr.write("error: version bump produced no changes; aborting\n")
         sys.exit(1)
 
@@ -300,16 +308,17 @@ def main() -> None:
         print("Changes staged but not committed. Run 'git diff' to review.")
         return
 
-    # Let user review/edit changelog before proceeding
-    editor_cmd = shlex.split(os.environ.get("EDITOR", "vim"))
-    subprocess.run(editor_cmd + ["CHANGELOG.md"], check=True)
+    if has_changes:
+        # Let user review/edit changelog before proceeding
+        editor_cmd = shlex.split(os.environ.get("EDITOR", "vim"))
+        subprocess.run(editor_cmd + ["CHANGELOG.md"], check=True)
 
-    # Display the changelog entry as edited
-    changelog_entry = extract_changelog_entry(root / "CHANGELOG.md", f"v{new_version}")
-    if changelog_entry:
-        print(f"\nChangelog entry for v{new_version}:\n")
-        print(changelog_entry)
-        print()
+        # Display the changelog entry as edited
+        changelog_entry = extract_changelog_entry(root / "CHANGELOG.md", f"v{new_version}")
+        if changelog_entry:
+            print(f"\nChangelog entry for v{new_version}:\n")
+            print(changelog_entry)
+            print()
 
     while True:
         response = input("Proceed with release? [y/n] ").strip().lower()
@@ -320,9 +329,11 @@ def main() -> None:
             sys.exit(1)
         print(f"Invalid response: '{response}'. Please enter 'y' or 'n'.")
 
-    commit_release(new_version, root)
+    if has_changes:
+        commit_release(new_version, root)
 
-    publish_crate(root)
+    if not args.skip_publish:
+        publish_crate(root)
 
     tag_release(new_version, root)
     push_release(root)
