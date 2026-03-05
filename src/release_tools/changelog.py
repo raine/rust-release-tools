@@ -88,12 +88,20 @@ Generate a user-focused changelog entry for a git tag and insert it into CHANGEL
 - Keep entries concise—one line per change is usually enough
 - If a tag has no user-facing changes, skip it entirely—don't modify CHANGELOG.md
 
+## Linking Issues and Pull Requests
+
+- Determine the GitHub repository URL from the git remote (e.g., `git remote get-url origin`)
+- When commits reference GitHub issues or pull requests (e.g., `#70`, `fixes #70`, `closes #65`), link them at the end of the relevant changelog entry
+- Even when commits don't explicitly reference issues or PRs, check recent closed issues and merged pull requests (`gh issue list --state closed --limit 20`, `gh pr list --state merged --limit 20`) to find ones related to the changes, and link them
+- Format: `([#70](https://github.com/OWNER/REPO/issues/70))` for issues, `([#68](https://github.com/OWNER/REPO/pull/68))` for pull requests
+- If multiple entries relate to the same issue/PR, link it on each relevant entry
+
 ## Entry Format
 
 ```markdown
 ## {input} (YYYY-MM-DD)
 
-- Change description
+- Change description ([#70](https://github.com/OWNER/REPO/issues/70))
 - Another change description
 ```
 """
@@ -145,12 +153,20 @@ Generate a user-focused changelog entry for the upcoming release `{input}` and i
 - Keep entries concise—one line per change is usually enough
 - If there are no user-facing changes, still create a minimal entry noting the release
 
+## Linking Issues and Pull Requests
+
+- Determine the GitHub repository URL from the git remote (e.g., `git remote get-url origin`)
+- When commits reference GitHub issues or pull requests (e.g., `#70`, `fixes #70`, `closes #65`), link them at the end of the relevant changelog entry
+- Even when commits don't explicitly reference issues or PRs, check recent closed issues and merged pull requests (`gh issue list --state closed --limit 20`, `gh pr list --state merged --limit 20`) to find ones related to the changes, and link them
+- Format: `([#70](https://github.com/OWNER/REPO/issues/70))` for issues, `([#68](https://github.com/OWNER/REPO/pull/68))` for pull requests
+- If multiple entries relate to the same issue/PR, link it on each relevant entry
+
 ## Entry Format
 
 ```markdown
 ## {input} (YYYY-MM-DD)
 
-- Change description
+- Change description ([#70](https://github.com/OWNER/REPO/issues/70))
 - Another change description
 ```
 """
