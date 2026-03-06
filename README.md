@@ -27,6 +27,9 @@ cargo-release major          # Bump major version (0.1.0 -> 1.0.0)
 cargo-release current        # Release existing version (for first release)
 cargo-release --dry-run patch  # Preview without committing
 cargo-release --continue     # Resume failed release
+cargo-release --continue --skip-publish  # Resume when crate already published
+cargo-release --skip-changelog patch     # Skip AI changelog, write manually
+cargo-release --skip-publish patch       # Skip publishing to crates.io
 ```
 
 ### update-changelog

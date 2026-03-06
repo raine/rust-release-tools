@@ -262,6 +262,7 @@ def main() -> None:
     os.chdir(root)
 
     ensure_main_branch(root)
+    run(["git", "pull", "--rebase"], root)
 
     if args.continue_release:
         if args.bump:
