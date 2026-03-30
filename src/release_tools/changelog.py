@@ -161,6 +161,10 @@ Generate a user-focused changelog entry for the upcoming release `{input}` and i
 - Format: `([#70](https://github.com/OWNER/REPO/issues/70))` for issues, `([#68](https://github.com/OWNER/REPO/pull/68))` for pull requests
 - If multiple entries relate to the same issue/PR, link it on each relevant entry
 
+## Important
+
+- Do NOT commit the changelog changes. Only update the file.
+
 ## Entry Format
 
 ```markdown
