@@ -40,7 +40,9 @@ def find_project_root() -> pathlib.Path:
     sys.exit(1)
 
 
-def run(cmd: list[str], root: pathlib.Path, *, check: bool = True) -> subprocess.CompletedProcess:
+def run(
+    cmd: list[str], root: pathlib.Path, *, check: bool = True
+) -> subprocess.CompletedProcess:
     """Execute a command relative to the repo root."""
     return subprocess.run(cmd, cwd=root, check=check)
 
@@ -60,7 +62,9 @@ def run_capture(cmd: list[str], root: pathlib.Path) -> str:
 def ensure_main_branch(root: pathlib.Path) -> None:
     branch = run_capture(["git", "rev-parse", "--abbrev-ref", "HEAD"], root).strip()
     if branch != "main":
-        sys.stderr.write(f"error: releases must be made from main branch (currently on '{branch}')\n")
+        sys.stderr.write(
+            f"error: releases must be made from main branch (currently on '{branch}')\n"
+        )
         sys.exit(1)
 
 
@@ -103,7 +107,7 @@ def extract_changelog_entry(changelog_path: pathlib.Path, version: str) -> str |
     start = match.start()
 
     # Find the next ## heading or end of file
-    next_heading = re.search(r"^## ", content[match.end():], re.MULTILINE)
+    next_heading = re.search(r"^## ", content[match.end() :], re.MULTILINE)
     if next_heading:
         end = match.end() + next_heading.start()
     else:
@@ -139,7 +143,9 @@ def bump_version(current: str, bump: str) -> str:
     return f"{major}.{minor}.{patch}"
 
 
-def update_cargo_files(cargo_toml: pathlib.Path, new_version: str, root: pathlib.Path) -> None:
+def update_cargo_files(
+    cargo_toml: pathlib.Path, new_version: str, root: pathlib.Path
+) -> None:
     toml_text = cargo_toml.read_text()
     new_toml_text, replaced = re.subn(
         r'(?m)^(version\s*=\s*")([^"]+)(")',
@@ -169,16 +175,18 @@ def tag_release(new_version: str, root: pathlib.Path) -> None:
     run(["git", "tag", "-a", f"v{new_version}", "-m", message], root)
 
 
-def push_release(root: pathlib.Path) -> None:
+def push_release(tag: str, root: pathlib.Path) -> None:
     run(["git", "push"], root)
-    run(["git", "push", "--tags"], root)
+    run(["git", "push", "origin", tag], root)
 
 
 def publish_crate(root: pathlib.Path) -> None:
     run(["cargo", "publish"], root)
 
 
-def continue_release(root: pathlib.Path, cargo_toml: pathlib.Path, *, skip_publish: bool = False) -> None:
+def continue_release(
+    root: pathlib.Path, cargo_toml: pathlib.Path, *, skip_publish: bool = False
+) -> None:
     """Continue a release that failed after commit but before completion."""
     # Get the last commit message to extract version
     last_commit = run_capture(["git", "log", "-1", "--format=%s"], root).strip()
@@ -202,13 +210,16 @@ def continue_release(root: pathlib.Path, cargo_toml: pathlib.Path, *, skip_publi
         sys.exit(1)
 
     # Check if tag already exists
-    tag_exists = subprocess.run(
-        ["git", "rev-parse", f"v{version}"],
-        cwd=root,
-        check=False,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    ).returncode == 0
+    tag_exists = (
+        subprocess.run(
+            ["git", "rev-parse", f"v{version}"],
+            cwd=root,
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode
+        == 0
+    )
 
     print(f"Continuing release of {crate_name} v{version}")
 
@@ -280,12 +291,15 @@ def main() -> None:
 
     # Check for existing tag before doing work
     tag_name = f"v{new_version}"
-    if subprocess.run(
-        ["git", "rev-parse", tag_name],
-        cwd=root,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    ).returncode == 0:
+    if (
+        subprocess.run(
+            ["git", "rev-parse", tag_name],
+            cwd=root,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode
+        == 0
+    ):
         sys.stderr.write(f"error: tag {tag_name} already exists\n")
         sys.exit(1)
 
@@ -315,7 +329,9 @@ def main() -> None:
         subprocess.run(editor_cmd + ["CHANGELOG.md"], check=True)
 
         # Display the changelog entry as edited
-        changelog_entry = extract_changelog_entry(root / "CHANGELOG.md", f"v{new_version}")
+        changelog_entry = extract_changelog_entry(
+            root / "CHANGELOG.md", f"v{new_version}"
+        )
         if changelog_entry:
             print(f"\nChangelog entry for v{new_version}:\n")
             print(changelog_entry)
@@ -336,8 +352,9 @@ def main() -> None:
     if not args.skip_publish:
         publish_crate(root)
 
+    tag = f"v{new_version}"
     tag_release(new_version, root)
-    push_release(root)
+    push_release(tag, root)
 
     print(f"Released {crate_name} v{new_version}")
 
