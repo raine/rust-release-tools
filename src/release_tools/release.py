@@ -229,7 +229,7 @@ def continue_release(
     if not tag_exists:
         tag_release(version, root)
 
-    push_release(root)
+    push_release(f"v{version}", root)
 
     print(f"Released {crate_name} v{version}")
 
